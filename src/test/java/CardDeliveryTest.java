@@ -1,3 +1,4 @@
+import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.SelenideElement;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Keys;
@@ -18,22 +19,26 @@ import static com.codeborne.selenide.Selenide.*;
 
 public class CardDeliveryTest {
 
-    LocalDateTime dateTime = LocalDateTime.now();
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    String formattedString = LocalDateTime.now().plusDays(4).format(formatter);
-
+public String generateDate(long addDays, String pattern) {
+    return LocalDate.now().plusDays(addDays).format(DateTimeFormatter.ofPattern(pattern));
+}
     @Test
     void shouldSubmitRequest() {
+
 
         open("http://localhost:9999");
 
         $("[data-test-id=city] input").setValue("Оренбург");
+        String planningDate = generateDate(5,"dd.MM.yyyy");
         $("[data-test-id=date] input").doubleClick();
         $("[data-test-id=date] input").sendKeys(Keys.DELETE);
-        $("[data-test-id=date] input").setValue(formattedString);
+        $("[data-test-id=date] input").setValue(planningDate);
         $("[data-test-id=name] input").setValue("Иванов Василий");
         $("[data-test-id=phone] input").setValue("+79270000001");
         $("[data-test-id=agreement]").click(); //Чекбокс
         $x("//*[contains(text(),'Запланировать')]").click();  //Кнопка Запланировать Нужна задержка
-        $x("//*[contains(text(),'Успешно!')]").shouldBe(visible,Duration.ofSeconds(5));}
+        $(".notification__content")
+                .shouldHave(Condition.exactText("Встреча успешно запланирована на " + planningDate), Duration.ofSeconds(15))
+                .shouldBe(Condition.visible);}
+
 }
